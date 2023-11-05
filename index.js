@@ -31,7 +31,7 @@ const verifyToken = async (req, res, next) => {
   });
 };
 
-app.get("/", async (req, res) => {
+app.get("/api/v1", async (req, res) => {
   res.send("Assignment 11 C5 is running");
 });
 
@@ -73,7 +73,6 @@ async function run() {
 
     // get foodItems by email , category , pagination , sorting, foodCount
     app.get("/api/v1/foodItems", async (req, res) => {
-      console.log(req.query);
       const email = req.query.email;
       const category = req.query.category;
 
@@ -103,10 +102,20 @@ async function run() {
         .sort(sortObj)
         .toArray();
       const count = await foodItemsCollection.estimatedDocumentCount();
-      const topSell = await (
-        await foodItemsCollection.find().sort(sortObj).toArray()
-      ).slice(0, 6);
-      res.send({ result, count, topSell });
+
+      res.send({ result, count });
+    });
+
+    app.get("/api/v1/topSellFood", async (req, res) => {
+      const result = await foodItemsCollection
+        .find()
+        .sort({ total_purchase: "desc" })
+        .toArray();
+
+        const topSell = result.slice(0,6)
+        console.log(topSell);
+
+      res.send(topSell);
     });
 
     // get one item by _id
