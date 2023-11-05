@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, objectId } = require("mongodb");
 const app = express();
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -46,6 +46,9 @@ const client = new MongoClient(uri, {
   },
 });
 
+const database = client.db("assignment11C5");
+const foodItemsCollection = database.collection("foodItems");
+
 async function run() {
   try {
     // post by  jwt
@@ -61,6 +64,37 @@ async function run() {
           secure: false,
         })
         .send({ success: true });
+    });
+
+    // remove cookies
+    app.post("/removeCookie", async (req, res) => {
+      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+    });
+
+    // get foodItems
+    app.get("/api/v1/foodItems", async (req, res) => {
+      console.log(req.query);
+      const email = req.query.email;
+      const category = req.query.category;
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      const skip = (page - 1) * size;
+
+      let queryObj = {};
+
+      if (email) {
+        queryObj.email = email;
+      }
+      if (category) {
+        queryObj.category = category;
+      }
+      const result = await foodItemsCollection
+        .find(queryObj)
+        .skip(skip)
+        .limit(size)
+        .sort()
+        .toArray();
+      res.send(result);
     });
 
     await client.db("admin").command({ ping: 1 });
