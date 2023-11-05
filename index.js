@@ -76,25 +76,35 @@ async function run() {
       console.log(req.query);
       const email = req.query.email;
       const category = req.query.category;
+
+      const sortFild = req.query.sortFild;
+      const sortOrder = req.query.sortOrder;
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
       const skip = (page - 1) * size;
 
       let queryObj = {};
+      let sortObj = {};
 
       if (email) {
         queryObj.email = email;
       }
       if (category) {
-        queryObj.category = category;
+        queryObj.category = new RegExp("^" + category + "$", "i");
       }
+      if (sortFild && sortOrder) {
+        sortObj[sortFild] = sortOrder;
+      }
+
       const result = await foodItemsCollection
         .find(queryObj)
         .skip(skip)
         .limit(size)
-        .sort()
+        .sort(sortObj)
         .toArray();
-      res.send(result);
+      const count = await foodItemsCollection.estimatedDocumentCount();
+      const topSell= await (await foodItemsCollection.find().sort(sortObj).toArray()).slice(0,6)
+      res.send({ result, count , topSell });
     });
 
     await client.db("admin").command({ ping: 1 });
