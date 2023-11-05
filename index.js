@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion, objectId } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -71,7 +71,7 @@ async function run() {
       res.clearCookie("token", { maxAge: 0 }).send({ success: true });
     });
 
-    // get foodItems
+    // get foodItems by email , category , pagination , sorting, foodCount
     app.get("/api/v1/foodItems", async (req, res) => {
       console.log(req.query);
       const email = req.query.email;
@@ -103,8 +103,18 @@ async function run() {
         .sort(sortObj)
         .toArray();
       const count = await foodItemsCollection.estimatedDocumentCount();
-      const topSell= await (await foodItemsCollection.find().sort(sortObj).toArray()).slice(0,6)
-      res.send({ result, count , topSell });
+      const topSell = await (
+        await foodItemsCollection.find().sort(sortObj).toArray()
+      ).slice(0, 6);
+      res.send({ result, count, topSell });
+    });
+
+    // get one item by _id
+    app.get("/api/v1/foodItems/:id", async (req, res) => {
+      console.log(req.params.id);
+      const query = { _id: new ObjectId(req.params.id) };
+      const result = await foodItemsCollection.findOne(query);
+      res.send(result);
     });
 
     await client.db("admin").command({ ping: 1 });
