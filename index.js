@@ -138,11 +138,40 @@ async function run() {
       res.send(result);
     });
 
-    // post by new collection by userOrderCollection 
-    app.post("/api/v1/allOrders" , async(req , res)=>{
-      const info = req.body
-      const result = await userOrderCollection.insertOne(info)
-      res.send(result)
+    // post by new collection by userOrderCollection
+    app.post("/api/v1/allOrders", async (req, res) => {
+      const info = req.body;
+      const result = await userOrderCollection.insertOne(info);
+      res.send(result);
+    });
+
+    // get allOrdersCollection  api and  query by email specific user
+    app.get("/api/v1/allOrders", async (req, res) => {
+      console.log(req.query);
+      const email = req?.query?.email;
+      let queryObj = {};
+      if (email) {
+        queryObj.email = email;
+      }
+      const result = await userOrderCollection.find(queryObj).toArray();
+      res.send(result);
+    });
+
+    // patch by total_purchase food 
+    app.patch("/api/v1/foodItems/:_id" , async(req, res)=>{
+      const info = req.body.total_purchase
+      const id = req.params._id
+      
+      const filter = {_id : new ObjectId(id)}
+      const options = { upsert: true };
+    // Specify the update to set a value for the plot field
+    const updateDoc = {
+      $set: {
+        total_purchase : info
+      },
+    };
+    const result = await foodItemsCollection.updateOne(filter , updateDoc , options)
+    res.send({success:true})
     })
 
     await client.db("admin").command({ ping: 1 });
