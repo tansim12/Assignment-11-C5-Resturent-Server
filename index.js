@@ -9,7 +9,11 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "https://incredible-selkie-d11477.netlify.app",
+      "http://localhost:5173",
+      "http://localhost:5174",
+    ],
     credentials: true,
   })
 );
@@ -73,14 +77,16 @@ async function run() {
 
     // get foodItems by email , category , pagination , sorting, foodCount
     app.get("/api/v1/foodItems", async (req, res) => {
+      // console.log(req.query);
       const email = req.query.email;
       const category = req.query.category;
-
       const sortFild = req.query.sortFild;
       const sortOrder = req.query.sortOrder;
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
       const skip = (page - 1) * size;
+      const search = req.query.search;
+      console.log(search);
 
       let queryObj = {};
       let sortObj = {};
@@ -91,10 +97,13 @@ async function run() {
       if (category) {
         queryObj.category = new RegExp("^" + category + "$", "i");
       }
+      if (search) {
+        queryObj.food_name = search; 
+      }
       if (sortFild && sortOrder) {
         sortObj[sortFild] = sortOrder;
       }
-
+     console.log(queryObj);
       const result = await foodItemsCollection
         .find(queryObj)
         .skip(skip)
@@ -106,21 +115,24 @@ async function run() {
       res.send({ result, count });
     });
 
+    // get sorting by topSell
     app.get("/api/v1/topSellFood", async (req, res) => {
+      const query = {};
+      const options = {
+        projection: { image: 1, price: 1, category: 1, food_name: 1 },
+      };
       const result = await foodItemsCollection
-        .find()
+        .find(query, options)
         .sort({ total_purchase: "desc" })
         .toArray();
 
-        const topSell = result.slice(0,6)
-        console.log(topSell);
+      const topSell = result.slice(0, 6);
 
       res.send(topSell);
     });
 
     // get one item by _id
     app.get("/api/v1/foodItems/:id", async (req, res) => {
-      console.log(req.params.id);
       const query = { _id: new ObjectId(req.params.id) };
       const result = await foodItemsCollection.findOne(query);
       res.send(result);
