@@ -52,6 +52,7 @@ const client = new MongoClient(uri, {
 
 const database = client.db("assignment11C5");
 const foodItemsCollection = database.collection("foodItems");
+const userOrderCollection = database.collection("usersOrders");
 
 async function run() {
   try {
@@ -86,7 +87,6 @@ async function run() {
       const size = parseInt(req.query.size);
       const skip = (page - 1) * size;
       const search = req.query.search;
-      console.log(search);
 
       let queryObj = {};
       let sortObj = {};
@@ -98,12 +98,12 @@ async function run() {
         queryObj.category = new RegExp("^" + category + "$", "i");
       }
       if (search) {
-        queryObj.food_name = search; 
+        queryObj.food_name = search;
       }
       if (sortFild && sortOrder) {
         sortObj[sortFild] = sortOrder;
       }
-     console.log(queryObj);
+
       const result = await foodItemsCollection
         .find(queryObj)
         .skip(skip)
@@ -137,6 +137,13 @@ async function run() {
       const result = await foodItemsCollection.findOne(query);
       res.send(result);
     });
+
+    // post by new collection by userOrderCollection 
+    app.post("/api/v1/allOrders" , async(req , res)=>{
+      const info = req.body
+      const result = await userOrderCollection.insertOne(info)
+      res.send(result)
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
