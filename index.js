@@ -57,7 +57,7 @@ const userOrderCollection = database.collection("usersOrders");
 async function run() {
   try {
     // post by  jwt
-    app.post("/jwt", async (req, res) => {
+    app.post("/api/v1/jwt", async (req, res) => {
       const user = req.body;
       const token = jwt.sign({ data: user }, process.env.SEC, {
         expiresIn: "1h",
@@ -67,13 +67,19 @@ async function run() {
         .cookie("token", token, {
           httpOnly: true,
           secure: false,
+          // secure: true,
+          // sameSite:"none"
         })
         .send({ success: true });
     });
 
     // remove cookies
-    app.post("/removeCookie", async (req, res) => {
-      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+    app.post("/api/v1/removeCookie", async (req, res) => {
+      res
+        // .clearCookie('token', { maxAge: 0, sameSite: 'none', secure: true })
+        // .send({ success: true })
+        .clearCookie("token", { maxAge: 0, secure: false })
+        .send({ success: true });
     });
 
     // get foodItems by email , category , pagination , sorting, foodCount
@@ -115,6 +121,14 @@ async function run() {
       res.send({ result, count });
     });
 
+    // post by specific user AddAFoodItems by profile
+    app.post("/api/v1/foodItems", async (req, res) => {
+      const info = req.body;
+      const result = await foodItemsCollection.insertOne(info);
+
+      res.send(result);
+    });
+
     // get sorting by topSell
     app.get("/api/v1/topSellFood", async (req, res) => {
       const query = {};
@@ -146,7 +160,7 @@ async function run() {
     });
 
     // get allOrdersCollection  api and  query by email specific user
-    app.get("/api/v1/allOrders", async (req, res) => {
+    app.get("/api/v1/allOrders", verifyToken, async (req, res) => {
       const email = req?.query?.email;
       let queryObj = {};
       if (email) {
