@@ -67,9 +67,9 @@ async function run() {
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
-          // secure: true,
-          // sameSite:"none"
+          // secure: false,
+          secure: true,
+          sameSite: "none",
         })
         .send({ success: true });
     });
@@ -77,10 +77,10 @@ async function run() {
     // remove cookies
     app.post("/api/v1/removeCookie", async (req, res) => {
       res
-        // .clearCookie('token', { maxAge: 0, sameSite: 'none', secure: true })
-        // .send({ success: true })
-        .clearCookie("token", { maxAge: 0, secure: false })
+        .clearCookie("token", { maxAge: 0, sameSite: "none", secure: true })
         .send({ success: true });
+      // .clearCookie("token", { maxAge: 0, secure: false })
+      // .send({ success: true });
     });
 
     // get foodItems by email , category , pagination , sorting, foodCount
@@ -105,7 +105,7 @@ async function run() {
         queryObj.category = new RegExp("^" + category + "$", "i");
       }
       if (search) {
-        queryObj.food_name = search;
+        queryObj.food_name = { $regex: search, $options: "i" };
       }
       if (sortFild && sortOrder) {
         sortObj[sortFild] = sortOrder;
@@ -122,34 +122,29 @@ async function run() {
       res.send({ result, count });
     });
 
-      // update foodItemsCollection
-      app.put("/api/v1/foodItems", async (req, res) => {
-        const id = req.body._id;
-        const filter = { _id: new ObjectId(id) };
-        const options = { upsert: true };
-  
-        const updateDoc = {
-          $set: {
-            category: req.body.category,
-            price: req.body.price,
-            image: req.body.image,
-            rating: req.body.rating,
-            stored_date: req.body.stored_date,
-            food_origin: req.body.food_origin,
-            description: req.body.description,
-            quantity: req.body.quantity,
-            food_name: req.body.food_name,
-            email: req.body.email,
-          },
-        };
-  
-        const result = await foodItemsCollection.updateOne(
-          filter,
-          updateDoc,
-          options
-        );
-        res.send(result);
-      });
+    // update foodItemsCollection
+    app.put("/api/v1/foodItems", async (req, res) => {
+      const id = req.body._id;
+      const filter = { _id: new ObjectId(id) };
+
+      const updateDoc = {
+        $set: {
+          category: req.body.category,
+          price: req.body.price,
+          image: req.body.image,
+          rating: req.body.rating,
+          stored_date: req.body.stored_date,
+          food_origin: req.body.food_origin,
+          description: req.body.description,
+          quantity: req.body.quantity,
+          food_name: req.body.food_name,
+          email: req.body.email,
+        },
+      };
+
+      const result = await foodItemsCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     // post by specific user AddAFoodItems by profile
     app.post("/api/v1/foodItems", async (req, res) => {
@@ -175,9 +170,6 @@ async function run() {
       const result = await userAddNewFoodsCollection.find(queryObj).toArray();
       res.send(result);
     });
-
-  
-
 
     // update userAddNewFoods
     app.put("/api/v1/userAddNewFoods", async (req, res) => {
