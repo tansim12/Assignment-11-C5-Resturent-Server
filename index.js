@@ -53,6 +53,7 @@ const client = new MongoClient(uri, {
 const database = client.db("assignment11C5");
 const foodItemsCollection = database.collection("foodItems");
 const userOrderCollection = database.collection("usersOrders");
+const userAddNewFoodsCollection = database.collection("allUserAddedANewFoods");
 
 async function run() {
   try {
@@ -125,9 +126,26 @@ async function run() {
     app.post("/api/v1/foodItems", async (req, res) => {
       const info = req.body;
       const result = await foodItemsCollection.insertOne(info);
-
       res.send(result);
     });
+
+    // post by new collection and  user add a  new food
+    app.post("/api/v1/userAddNewFoods", async (req, res) => {
+      const info = req.body;
+      const result = await userAddNewFoodsCollection.insertOne(info);
+      res.send(result);
+    });
+
+  //  get user Added a new items api and query by email 
+  app.get("/api/v1/userAddNewFoods" , async(req, res)=>{
+    const userEmail = req.query.email;
+    let queryObj = {}
+    if (userEmail) {
+      queryObj.email = userEmail
+    }
+    const result = await userAddNewFoodsCollection.find(queryObj).toArray()
+    res.send(result)
+  }) 
 
     // get sorting by topSell
     app.get("/api/v1/topSellFood", async (req, res) => {
