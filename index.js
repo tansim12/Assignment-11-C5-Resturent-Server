@@ -122,6 +122,35 @@ async function run() {
       res.send({ result, count });
     });
 
+      // update foodItemsCollection
+      app.put("/api/v1/foodItems", async (req, res) => {
+        const id = req.body._id;
+        const filter = { _id: new ObjectId(id) };
+        const options = { upsert: true };
+  
+        const updateDoc = {
+          $set: {
+            category: req.body.category,
+            price: req.body.price,
+            image: req.body.image,
+            rating: req.body.rating,
+            stored_date: req.body.stored_date,
+            food_origin: req.body.food_origin,
+            description: req.body.description,
+            quantity: req.body.quantity,
+            food_name: req.body.food_name,
+            email: req.body.email,
+          },
+        };
+  
+        const result = await foodItemsCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+        res.send(result);
+      });
+
     // post by specific user AddAFoodItems by profile
     app.post("/api/v1/foodItems", async (req, res) => {
       const info = req.body;
@@ -136,16 +165,48 @@ async function run() {
       res.send(result);
     });
 
-  //  get user Added a new items api and query by email 
-  app.get("/api/v1/userAddNewFoods" , async(req, res)=>{
-    const userEmail = req.query.email;
-    let queryObj = {}
-    if (userEmail) {
-      queryObj.email = userEmail
-    }
-    const result = await userAddNewFoodsCollection.find(queryObj).toArray()
-    res.send(result)
-  }) 
+    //  get user Added a new items api and query by email
+    app.get("/api/v1/userAddNewFoods", verifyToken, async (req, res) => {
+      const userEmail = req.query.email;
+      let queryObj = {};
+      if (userEmail) {
+        queryObj.email = userEmail;
+      }
+      const result = await userAddNewFoodsCollection.find(queryObj).toArray();
+      res.send(result);
+    });
+
+  
+
+
+    // update userAddNewFoods
+    app.put("/api/v1/userAddNewFoods", async (req, res) => {
+      const id = req.body._id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: {
+          category: req.body.category,
+          price: req.body.price,
+          image: req.body.image,
+          rating: req.body.rating,
+          stored_date: req.body.stored_date,
+          food_origin: req.body.food_origin,
+          description: req.body.description,
+          quantity: req.body.quantity,
+          food_name: req.body.food_name,
+          email: req.body.email,
+        },
+      };
+
+      const result = await userAddNewFoodsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
 
     // get sorting by topSell
     app.get("/api/v1/topSellFood", async (req, res) => {
