@@ -53,7 +53,6 @@ const client = new MongoClient(uri, {
 const database = client.db("assignment11C5");
 const foodItemsCollection = database.collection("foodItems");
 const userOrderCollection = database.collection("usersOrders");
-const userAddNewFoodsCollection = database.collection("allUserAddedANewFoods");
 const userInfoCollection = database.collection("userInfo");
 
 async function run() {
@@ -131,57 +130,8 @@ async function run() {
     });
 
     // update foodItemsCollection
-    app.put("/api/v1/foodItems", async (req, res) => {
-      const id = req.body._id;
-      const filter = { _id: new ObjectId(id) };
-
-      const updateDoc = {
-        $set: {
-          category: req.body.category,
-          price: req.body.price,
-          image: req.body.image,
-          rating: req.body.rating,
-          stored_date: req.body.stored_date,
-          food_origin: req.body.food_origin,
-          description: req.body.description,
-          quantity: req.body.quantity,
-          food_name: req.body.food_name,
-          email: req.body.email,
-        },
-      };
-
-      const result = await foodItemsCollection.updateOne(filter, updateDoc);
-      res.send(result);
-    });
-
-    // post by specific user AddAFoodItems by profile
-    app.post("/api/v1/foodItems", async (req, res) => {
-      const info = req.body;
-      const result = await foodItemsCollection.insertOne(info);
-      res.send(result);
-    });
-
-    // post by new collection and  user add a  new food
-    app.post("/api/v1/userAddNewFoods", async (req, res) => {
-      const info = req.body;
-      const result = await userAddNewFoodsCollection.insertOne(info);
-      res.send(result);
-    });
-
-    //  get user Added a new items api and query by email
-    app.get("/api/v1/userAddNewFoods", verifyToken, async (req, res) => {
-      const userEmail = req.query.email;
-      let queryObj = {};
-      if (userEmail) {
-        queryObj.email = userEmail;
-      }
-      const result = await userAddNewFoodsCollection.find(queryObj).toArray();
-      res.send(result);
-    });
-
-    // update userAddNewFoods
-    app.put("/api/v1/userAddNewFoods", async (req, res) => {
-      const id = req.body._id;
+    app.put("/api/v1/foodItems/:_id", async (req, res) => {
+      const id = req.params._id
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
 
@@ -200,13 +150,18 @@ async function run() {
         },
       };
 
-      const result = await userAddNewFoodsCollection.updateOne(
-        filter,
-        updateDoc,
-        options
-      );
+      const result = await foodItemsCollection.updateOne(filter, updateDoc , options);
       res.send(result);
     });
+
+    // post by specific user AddAFoodItems by profile
+    app.post("/api/v1/foodItems", async (req, res) => {
+      const info = req.body;
+  
+      const result = await foodItemsCollection.insertOne(info);
+      res.send(result);
+    });
+
 
     // get sorting by topSell
     app.get("/api/v1/topSellFood", async (req, res) => {
@@ -230,6 +185,16 @@ async function run() {
       const result = await foodItemsCollection.findOne(query);
       res.send(result);
     });
+    // get one item by _id just for purchase form 
+    app.get("/api/v1/foodItemsFindPurchaseForm/:id",verifyToken,  async (req, res) => {
+      const query = { _id: new ObjectId(req.params.id) };
+      const result = await foodItemsCollection.findOne(query);
+      res.send(result);
+    });
+
+
+
+
 
     // post by new collection by userOrderCollection
     app.post("/api/v1/allOrders", async (req, res) => {
@@ -239,7 +204,7 @@ async function run() {
     });
 
     // get allOrdersCollection  api and  query by email specific user
-    app.get("/api/v1/allOrders", verifyToken, async (req, res) => {
+    app.get("/api/v1/allOrders",  async (req, res) => {
       const email = req?.query?.email;
       let queryObj = {};
       if (email) {
@@ -255,6 +220,8 @@ async function run() {
       const result = await userOrderCollection.deleteOne(query);
       res.send(result);
     });
+
+
 
     // patch by total_purchase food
     app.patch("/api/v1/foodItems/:_id", async (req, res) => {
