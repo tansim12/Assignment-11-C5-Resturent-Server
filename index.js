@@ -54,6 +54,7 @@ const database = client.db("assignment11C5");
 const foodItemsCollection = database.collection("foodItems");
 const userOrderCollection = database.collection("usersOrders");
 const userAddNewFoodsCollection = database.collection("allUserAddedANewFoods");
+const userInfoCollection = database.collection("userInfo");
 
 async function run() {
   try {
@@ -82,6 +83,13 @@ async function run() {
       // .clearCookie("token", { maxAge: 0, secure: false })
       // .send({ success: true });
     });
+
+    // user info stored when user registered
+    app.post("/api/v1/registerUserInfo" , async(req, res)=>{
+      const info  = req.body
+      const result = await userInfoCollection.insertOne(info)
+      res.send(result)
+    })
 
     // get foodItems by email , category , pagination , sorting, foodCount
     app.get("/api/v1/foodItems", async (req, res) => {
